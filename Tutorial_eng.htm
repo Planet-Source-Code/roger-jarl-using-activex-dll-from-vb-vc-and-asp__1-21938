@@ -1,0 +1,145 @@
+<html>
+<head>
+<title>ActiveX Tutorial</title>
+<STYLE>
+BODY
+{
+    FONT-SIZE: x-small;
+    FONT-FAMILY: Verdana, Tahoma, Arial
+}
+</STYLE>
+</head>
+<body>
+<h3>Activex in Visual Basic, Visual C++ and ASP</h3>
+<p>Here is a&nbsp;tutorial on how to create&nbsp;an ActiveX DLL in Visual Basic, and then how to use it from Visual C++ and ASP.<br>
+Create a folder named "Tutorial".<br>
+Create&nbsp;3 subfolders called "ASP", "VB" and "VC".</p>
+<hr>
+<p>Run Visual Basic.<br>
+Choose&nbsp;to create "Standard EXE".<br>
+Name the project to "prjTest" and the form to "frmMain".<br>
+Add a&nbsp;label("lblWinDir") and a button("cmdGetWinDir").</p>
+<P> Add a&nbsp;project - "ActiveX DLL".<br>
+Name it to "Project" and the class to "Class".<br>
+Create a reference between "prjTest" and "Project".<BR>The function will 
+return the name of the Windows folder.<br>
+Paste the following into "Class":</P>
+<p><font color=navy>Option Explicit</font><br>
+<font color=navy>Private Declare Function</font> GetWindowsDirectory <FONT 
+color=navy>Lib</FONT> "kernel32" <FONT 
+color=navy>Alias</FONT> "GetWindowsDirectoryA" (<FONT color=navy>ByVal</FONT> 
+lpBuffer <FONT color=navy>As String</FONT>, <FONT color=navy>ByVal</FONT> nSize 
+<FONT color=navy>As Long</FONT>) <FONT color=navy>As Long</FONT>    
+</p>
+<p><FONT color=navy>Public Function</FONT> WinDir() <FONT 
+color=navy>As String</FONT>    <br>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=navy>Dim</FONT> ret 
+<FONT color=navy>As Long</FONT>
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=navy>Dim</FONT> sBuffer 
+<FONT color=navy>As String</FONT>
+   <br>&nbsp;&nbsp;&nbsp;&nbsp;sBuffer$ =         Space$(255) <FONT 
+color=green>' Create a&nbsp;buffer</FONT><br>&nbsp;&nbsp;&nbsp;&nbsp;ret = 
+  GetWindowsDirectory(sBuffer$, 
+Len(sBuffer$)) <FONT color=green>' API-call</FONT>&nbsp;
+      <br>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=navy>If</FONT> ret &gt; 
+0 <FONT color=navy>Then</FONT>     WinDir$ =      
+       Left$(sBuffer$, ret)<br><FONT color=navy>End Function</FONT>
+ </p>
+<p> Paste the following into "frmMain":</p>
+<p><FONT color=navy>Option Explicit</FONT> <br><FONT color=navy>Private Sub</FONT>
+  cmdGetWinDir_Click()<br>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=navy>Dim</FONT> MyClass 
+<FONT color=navy>As</FONT>
+   Project.Class<br>&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=navy>Set</FONT> MyClass 
+= <FONT color=navy>New</FONT> Project.Class<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lblWinDir.Caption = MyClass.WinDir 
+<FONT color=green>' Call the class function</FONT><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<FONT color=navy>Set</FONT> MyClass 
+= <FONT color=navy>Nothing</FONT> <FONT color=green> ' Release</FONT><br><FONT color=navy>End Sub</FONT>
+ </p>
+<p>Run with "F5".</p>
+<p>Compile the ActiveX DLL-file as "WinDir.dll" in the VC folder.</p>
+<p>
+The ActiveX DLL must be registered for use with other development tools.<br>
+Register the file with "Start", "Run...",
+"Regsvr32 drive:\path\WinDir.dll".</p>
+<hr>
+<p>Run Visual C++.<BR>Now a new project must be created.<br>
+Click&nbsp;"File" and "New...".<br>
+Create a new "MFC AppWizard(exe)".<br>
+Name it&nbsp;"WinDir".<br>
+Select "Dialog based".<br>
+Click "Next".<br>
+Deselect "About box".<br>
+Click&nbsp;"Finish", and then "OK".</p>
+<p>Now it is time to import the DLL file.<BR>Click on the "FileView" tab.&nbsp;<br>
+Expand "Header Files."<br>
+Open "StdAfx.h".<br>
+Add these 2 lines before the last line where it says: "#end if":</p>
+<p><FONT color=gray>#import "WinDir.dll"<br>
+using namespace Project;</FONT>
+</p>
+<p> Now design the dialog form called 
+IDD_WINDIR_DIALOG.<BR> Remove "IDC_STATIC".<br>
+Add an Edit box.<br>
+Add a button.<br>
+Open Class Wizard&nbsp;(Ctrl-W).<br>
+Click the "Member Variables" tab.<br>
+Select "IDC_EDIT1".<br>
+Click "Add variable...".<br>
+Name it to "m_Edit".<br>
+Click on the "OK" button.<br>
+Close Class Wizard.<br>
+Doubleclick on the button.<br>
+Click "OK" to create a&nbsp;name for the variable.<br>
+Go to the "OnButton1" function in WinDirDlg.cpp and paste following lines:</p>
+<p>HRESULT hresult;<br>
+CLSID clsid;<br>
+CoInitialize(NULL);<br>
+hresult=CLSIDFromProgID(OLESTR("Project.Class"),&amp;clsid);<br>
+_Class *t;<br>
+hresult=CoCreateInstance(clsid,NULL,CLSCTX_INPROC_SERVER,<FONT 
+color=blue>__uuidof</FONT>(_Class),(LPVOID*) &amp;t);<br>
+<FONT color=blue>if</FONT>
+(FAILED(hresult))<br>
+{<br>
+AfxMessageBox("Creation Failed");<br>
+<FONT color=blue>return</FONT>;<br>
+}<br>
+_variant_t test;<br>
+CString s;<br>
+test=t-&gt;WinDir();<br>
+s=test.bstrVal;<br>
+m_Edit=s;<br>
+UpdateData(FALSE);<br><FONT 
+color=green>//MessageBox(s,"Test",MB_OK|MB_ICONINFORMATION)</FONT>
+;<br>
+t-&gt;Release();<br>
+CoUninitialize();</p>
+<p> Run with Ctrl+F5.</p>
+<hr>
+<p>Create a new empty&nbsp;text-document in the ASP folder. Name it to "WinDir.asp".<br>
+Doubleclick on it to start&nbsp;Visual InterDev.<br>
+Paste this lines:</p>
+<p><FONT style="BACKGROUND-COLOR: yellow">&lt;%@ 
+Language="VBScript" %&gt;</FONT>&nbsp;<br><FONT 
+style="BACKGROUND-COLOR: yellow">&lt;%</FONT> <FONT color=blue><STRONG>Option Explicit</STRONG> 
+</FONT>&nbsp;<FONT style="BACKGROUND-COLOR: yellow">%&gt;</FONT><br>
+<FONT color=blue>&lt;</FONT><FONT color=#660000>html</FONT><FONT color=blue>&gt;</FONT><br>
+<FONT color=blue>&lt;</FONT><FONT color=#660000>head</FONT><FONT color=blue>&gt;</FONT><br>
+<FONT color=blue>&lt;</FONT><FONT color=#660000>title</FONT><FONT color=blue>&gt;</FONT>ActiveX Tutorial<FONT color=blue> <FONT 
+>&lt;</FONT>/</FONT><FONT color=#660000>title</FONT><FONT color=blue>&gt;</FONT><br>
+<FONT color=blue>&lt;</FONT><FONT color=#660000><FONT color=blue>/</FONT>head</FONT><FONT 
+color=blue>&gt;</FONT><br>
+<FONT color=blue>&lt;</FONT><FONT color=#660000>body</FONT><FONT color=blue>&gt;</FONT><br>
+<FONT style="BACKGROUND-COLOR: yellow">&lt;%</FONT><br>
+<STRONG><FONT color=blue>Dim</FONT></STRONG>&nbsp;MyClass<br>
+<FONT color=blue><STRONG>Set</STRONG></FONT>&nbsp;MyClass&nbsp;=&nbsp;CreateObject("Project.Class")<br>
+Response.Write "Windows directory: " &amp; MyClass.WinDir<br>
+<FONT color=blue><STRONG>Set</STRONG></FONT>&nbsp;MyClass&nbsp;=&nbsp;<STRONG><FONT color=blue>Nothing</FONT></STRONG><br>
+<FONT style="BACKGROUND-COLOR: yellow">%&gt;</FONT><br>
+<FONT color=blue>&lt;/</FONT><FONT color=#660000>body</FONT><FONT color=blue>&gt;</FONT><br>
+<FONT color=blue>&lt;/</FONT><FONT color=#660000>html</FONT><FONT color=blue>&gt;</FONT>
+</p>
+<p>Save the&nbsp;file and&nbsp;run it on a&nbsp;web server.</p></FONT>
+<p><A href="ActiveX.zip">Download</A></p>
+</body>
+</html>
